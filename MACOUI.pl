@@ -1,8 +1,7 @@
 #!/usr/bin/perl
 
 # MACOUI v1.3
-# Created by John Tassano
-# john.tassano@centurylink.com
+# Created by John T
 # Wireshark vendor/manufacture database 2015
 # process list of mac addresses 
 # Search by name or macaddress.
