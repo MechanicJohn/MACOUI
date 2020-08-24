@@ -1,7 +1,3 @@
-# MACOUI
- MACOUI
-
-Example.txt
 #You can process a list of mac address in a text file.
 000435
 000436
