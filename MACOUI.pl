@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
-
-# MACOUI v1.1
+# MACOUI v1.2
 # Created by John Tassano
 # john.tassano@centurylink.com
 # Wireshark vendor/manufacture database 2015
@@ -11,21 +10,21 @@
 use strict;
 use warnings;
 use Data::Dumper;
+use Win32::Clipboard;
 
 # Print header
-my $VERSION = '1.1';
-my $limit = 30;
+my $VERSION = '1.2';
+my $limit = 100;
 my $logfile = "MACOUI.txt";
+my $clip = Win32::Clipboard::GetText();
 
 print "\n  MAC address OUI lookup tool v$VERSION\n";
-
-print "T " .  @ARGV;
 
 # Check arguments
 if(	@ARGV > 1){
 	if ( $ARGV[1] eq "-a" ) {
-		$limit = 99999999;
-		print "-a used showing all entrys\n";
+		$limit = 999999999;
+		print "  -a switch used showing all entrys\n";
 		chomp($ARGV[0]);
 	}
 	else
@@ -50,12 +49,15 @@ else{
 if ( $ARGV[0] =~ /^(.+\.txt)$/i)
 {
 	my $file = $1;
-	#print "This is a text file\n";
 	ProcessFile($file);
 }
 else{
 	ProcessMacAddress($ARGV[0]);
 }
+#print "\n";
+#print "  Done\n";
+my $input = <STDIN>;
+exit 1;
 
 sub ProcessFile
 {
@@ -99,8 +101,6 @@ sub ProcessMacAddress
 	  #return;
 	}
 
-
-	
 	my $file = 'OUI.txt';
 	open my $ouifile, $file or die "Could not open $file: $!";
 
@@ -111,9 +111,8 @@ sub ProcessMacAddress
 			$line =~ m/^([0-9a-f]{6})\s(.+)$/i)
 			{
 				my $checkoui = $1; my $company = $2; my $companydetail = $3;
-				$company =~ s/\s//g; my $reg = $company; quotemeta $reg;
-				#$reg = qr/$company/; #$reg = /\Q$company\E/i;
-				#print "$checkoui . $company . $companydetail . $OUI\n"; 
+				$company =~ s/\s//g; my $reg = $company; 
+				$reg = quotemeta $reg;
 				if ($OUI eq $checkoui) {
 					$companydetail = $company if (!$companydetail); 
 					print "  Found OUI: ".$OUI." - ".$companydetail."\n\n";
@@ -122,29 +121,15 @@ sub ProcessMacAddress
 				}
 				elsif ( $OUI =~ m/\Q$reg/i )
 				{
-					#print "  Found Company: ".$company." $checkoui \n\n";
 					$match = 1;
 					$mcount++;
-					#push @OUIArray, $company;
-					#push @infohash, \%reg;
-					#push @info, { 'oui' => $checkoui, 'company' => $company, 'companydetail' => $companydetail};
 					my %hash;
 					$hash{'oui'} = $checkoui;
 					$hash{'company'} = $company;
 					$hash{'companydetail'} = $companydetail;
 					push (@info, \%hash);
 				}
-			}
-			#Well-known addresses.
-			#01-80-C2-00-00-45	TRILL-End-Stations
-			else 
-			{
-				#if ( $line eq m/^$OUI/i) {
-				#$line =~ m/^([0-9a-f]{6})\s(.+)\s#\s(.+)$/i;
-				#	print $line."\n";
-				#$line =~ m/^([0-9a-f]{6})\s(.+)\s#\s(.+)$/i
-			}
-				
+			}	
 		}
 	}
 	close $ouifile;
@@ -153,14 +138,14 @@ sub ProcessMacAddress
 	if (@info) 
 	{
 		my $mutiple = 0;
-		my $ouistring; 
-		my $companystring;
+		my $ouistring = ""; 
+		my $companystring = "";
 		foreach my $hash_ref (@info) {
 			foreach (keys %{$hash_ref}) {
 				$mutiple++;
 				#Limt amount of entrys appended to ouistring and companystring
 				if ( $mutiple < $limit) {
-					$ouistring = $ouistring . " " . $hash_ref->{'oui'};
+					$ouistring = $ouistring . ", " . $hash_ref->{'oui'};
 					my $string = $hash_ref->{'company'};
 					if ( $hash_ref->{'companydetail'} )
 					{
@@ -170,15 +155,12 @@ sub ProcessMacAddress
 				}
 			}
 		}
-		
-		#print "OUIS $ouistring\n"; 
-		print "$mutiple matches found for $OUI\n";
-		print "Only Showing Fist $limit OUI found for $OUI: $ouistring\n";
+		print "  $mutiple matches found for $OUI\n";
+		print "  Only Showing Fist $limit OUI found for $OUI:" . "\n" . "$ouistring\n";
 		
 	}
 	
 	# Show if OUI was not found
-	
 	print "  Could not find OUI: ".$OUI."\n\n" if ($match == 0 );
 }
 
@@ -213,7 +195,7 @@ sub syntax
 sub error 
 {
 	my $input = shift;
-  print "  Error: No MAC address or OUI specified or invalid for $input.\n".
+	print "  Error: No MAC address or OUI specified or invalid for $input.\n".
         "    Usage: perl OUI_lookup.pl <MAC/OUI>\n".
         "    MAC Format:\n".
         "       001122334455\n".
@@ -227,4 +209,3 @@ sub error
 
 
 1;
-exit 0;
